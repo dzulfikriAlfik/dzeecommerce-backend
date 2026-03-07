@@ -1,0 +1,45 @@
+# ──────────────────────────────────────
+# Dzeecommerce Backend — Docker Compose
+# Local development stack
+# ──────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dzeecommerce-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dzeecommerce
+      POSTGRES_PASSWORD: dzeecommerce_dev
+      POSTGRES_DB: dzeecommerce_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dzeecommerce -d dzeecommerce_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: dzeecommerce-postgres-test
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: dzeecommerce
+      POSTGRES_PASSWORD: dzeecommerce_test
+      POSTGRES_DB: dzeecommerce_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dzeecommerce -d dzeecommerce_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local

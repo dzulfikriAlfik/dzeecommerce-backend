@@ -1,0 +1,27 @@
+// ─────────────────────────────────────────────────────
+// Dzeecommerce — Prisma schema
+// ─────────────────────────────────────────────────────
+// This is the baseline schema. Models will be added
+// incrementally as each feature is implemented.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Placeholder model for initial migration validation ──
+
+/// System metadata table for tracking schema version or config.
+model SystemMeta {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_meta")
+}
