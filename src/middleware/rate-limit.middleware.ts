@@ -10,13 +10,13 @@
 
 import type { Request, Response, NextFunction } from 'express'
 import { RateLimiterMemory } from 'rate-limiter-flexible'
-import { rateLimitConfig } from '../config/app.config.js'
+import { securityConfig } from '../config/security.config.js'
 import { sendError } from '../utils/api-response.js'
 
 /** Default rate limiter instance. */
 const defaultLimiter = new RateLimiterMemory({
-  points: rateLimitConfig.maxRequests,
-  duration: Math.round(rateLimitConfig.windowMs / 1000),
+  points: securityConfig.rateLimit.global.maxRequests,
+  duration: securityConfig.rateLimit.global.windowSeconds,
 })
 
 /**
@@ -33,8 +33,8 @@ export function createRateLimiter(
   const limiter =
     maxRequests !== undefined || windowSeconds !== undefined
       ? new RateLimiterMemory({
-          points: maxRequests ?? rateLimitConfig.maxRequests,
-          duration: windowSeconds ?? Math.round(rateLimitConfig.windowMs / 1000),
+          points: maxRequests ?? securityConfig.rateLimit.global.maxRequests,
+          duration: windowSeconds ?? securityConfig.rateLimit.global.windowSeconds,
         })
       : defaultLimiter
 
@@ -58,3 +58,15 @@ export function createRateLimiter(
 
 /** Default rate limiter middleware for general routes. */
 export const rateLimitMiddleware = createRateLimiter()
+
+/** Rate limiter middleware preset for auth routes. */
+export const authRateLimitMiddleware = createRateLimiter(
+  securityConfig.rateLimit.auth.maxRequests,
+  securityConfig.rateLimit.auth.windowSeconds,
+)
+
+/** Rate limiter middleware preset for webhook routes. */
+export const webhookRateLimitMiddleware = createRateLimiter(
+  securityConfig.rateLimit.webhook.maxRequests,
+  securityConfig.rateLimit.webhook.windowSeconds,
+)

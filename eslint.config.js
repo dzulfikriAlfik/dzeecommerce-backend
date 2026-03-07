@@ -27,6 +27,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/no-unnecessary-type-parameters': 'off',
       '@typescript-eslint/strict-boolean-expressions': 'off',
       '@typescript-eslint/restrict-template-expressions': [
         'error',
@@ -68,6 +69,8 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       'jsdoc/require-jsdoc': 'off',
       'jsdoc/require-description': 'off',

@@ -14,6 +14,7 @@ import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
 
 import { corsConfig } from '../config/app.config.js'
+import { securityConfig } from '../config/security.config.js'
 import {
   requestIdMiddleware,
   requestLoggerMiddleware,
@@ -32,14 +33,14 @@ export function createApp(): express.Express {
   const app = express()
 
   // ── Security headers ──
-  app.use(helmet())
+  app.use(helmet(securityConfig.helmet))
 
   // ── CORS ──
   app.use(cors(corsConfig))
 
   // ── Body parsers ──
-  app.use(express.json({ limit: '1mb' }))
-  app.use(express.urlencoded({ extended: true, limit: '1mb' }))
+  app.use(express.json({ limit: securityConfig.body.jsonLimit }))
+  app.use(express.urlencoded({ extended: true, limit: securityConfig.body.urlEncodedLimit }))
 
   // ── Cookies ──
   app.use(cookieParser())
