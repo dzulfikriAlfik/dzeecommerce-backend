@@ -21,7 +21,7 @@ const LOG_DIR = path.resolve(__dirname, '..', '..', 'logs')
 // ── Sensitive field redaction ──
 
 /** Fields whose values must never appear in logs. */
-const REDACTED_FIELDS = new Set([
+export const REDACTED_FIELDS: ReadonlySet<string> = new Set([
   'password',
   'newPassword',
   'confirmPassword',
@@ -42,7 +42,7 @@ const REDACTED_FIELDS = new Set([
  * @param obj - The object to redact.
  * @returns A shallow-redacted copy of the object.
  */
-function redact(obj: unknown): unknown {
+export function redact(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj
   }
