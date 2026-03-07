@@ -13,5 +13,25 @@
 import './config/load-env.js'
 
 import { startServer } from './app/server.js'
+import { connectDatabase, logger } from './config/index.js'
 
-startServer()
+/**
+ * Bootstrap the application runtime.
+ *
+ * Connects to database first, then starts HTTP server.
+ *
+ * @returns A promise that resolves when startup is complete.
+ */
+async function bootstrap(): Promise<void> {
+	try {
+		await connectDatabase()
+		startServer()
+	} catch (error) {
+		logger.error('Application startup failed', {
+			error: error instanceof Error ? error.message : String(error),
+		})
+		process.exit(1)
+	}
+}
+
+void bootstrap()

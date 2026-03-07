@@ -10,6 +10,7 @@
 import type { Server } from 'node:http'
 import { createApp } from './express.js'
 import { appConfig, logger } from '../config/index.js'
+import { disconnectDatabase } from '../config/database.js'
 
 /** Reference to the running HTTP server for shutdown. */
 let server: Server | null = null
@@ -46,7 +47,15 @@ export function startServer(): Server {
     if (server) {
       server.close(() => {
         logger.info('HTTP server closed')
-        process.exit(0)
+        void disconnectDatabase()
+          .catch((error: unknown) => {
+            logger.error('Failed to disconnect database during shutdown', {
+              error: error instanceof Error ? error.message : String(error),
+            })
+          })
+          .finally(() => {
+            process.exit(0)
+          })
       })
 
       // Force exit after 10 s if connections are not drained
