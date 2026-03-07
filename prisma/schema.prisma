@@ -13,7 +13,144 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ── Placeholder model for initial migration validation ──
+// ── Identity and RBAC foundation ──
+
+/// Application user identity.
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  fullName     String?  @map("full_name")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  sessions              Session[]
+  refreshTokens         RefreshToken[]
+  userRoles             UserRole[]       @relation("UserAssignedRoles")
+  roleAssignmentsMade   UserRole[]       @relation("UserRoleAssignedBy")
+  roleRevocationsMade   UserRole[]       @relation("UserRoleRevokedBy")
+  grantedRolePermission RolePermission[] @relation("RolePermissionGrantedBy")
+
+  @@map("users")
+}
+
+/// Role catalog used by RBAC.
+model Role {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+/// Permission catalog used by RBAC.
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+/// Many-to-many join between roles and permissions.
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String   @map("role_id")
+  permissionId String   @map("permission_id")
+  grantedById  String?  @map("granted_by_id")
+  grantedAt    DateTime @default(now()) @map("granted_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  grantedBy  User?      @relation("RolePermissionGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+  @@index([grantedById])
+  @@map("role_permissions")
+}
+
+/// Many-to-many join between users and roles.
+model UserRole {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  roleId       String    @map("role_id")
+  assignedById String?   @map("assigned_by_id")
+  revokedById  String?   @map("revoked_by_id")
+  assignedAt   DateTime  @default(now()) @map("assigned_at")
+  revokedAt    DateTime? @map("revoked_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user       User  @relation("UserAssignedRoles", fields: [userId], references: [id], onDelete: Cascade)
+  role       Role  @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  assignedBy User? @relation("UserRoleAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  revokedBy  User? @relation("UserRoleRevokedBy", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+  @@index([assignedById])
+  @@index([revokedById])
+  @@map("user_roles")
+}
+
+/// Login session metadata.
+model Session {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  sessionTokenHash String    @unique @map("session_token_hash")
+  userAgent        String?   @map("user_agent")
+  ipAddress        String?   @map("ip_address")
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
+  lastSeenAt       DateTime? @map("last_seen_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokens RefreshToken[]
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+/// Stored refresh tokens (hashed only) for rotation/invalidation.
+model RefreshToken {
+  id                String    @id @default(uuid())
+  userId            String    @map("user_id")
+  sessionId         String?   @map("session_id")
+  tokenHash         String    @unique @map("token_hash")
+  expiresAt         DateTime  @map("expires_at")
+  revokedAt         DateTime? @map("revoked_at")
+  replacedByTokenId String?   @unique @map("replaced_by_token_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session         Session?      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  replacedByToken RefreshToken? @relation("RefreshTokenReplacement", fields: [replacedByTokenId], references: [id], onDelete: SetNull)
+  previousToken   RefreshToken? @relation("RefreshTokenReplacement")
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
 
 /// System metadata table for tracking schema version or config.
 model SystemMeta {
