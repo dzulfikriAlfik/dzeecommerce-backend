@@ -24,7 +24,14 @@ export function startServer(): Server {
   const app = createApp()
 
   server = app.listen(appConfig.port, () => {
-    logger.info(`Server started`, {
+    // Synchronous banner — always visible in the terminal
+    // eslint-disable-next-line no-console
+    console.log(
+      `\n🚀 Server running on http://localhost:${String(appConfig.port)} | env: ${appConfig.nodeEnv} | pid: ${String(process.pid)}\n`,
+    )
+
+    logger.info('Server started', {
+      host: 'localhost',
       port: appConfig.port,
       env: appConfig.nodeEnv,
       pid: process.pid,

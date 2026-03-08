@@ -4,9 +4,9 @@ import path from 'node:path'
 import { Prisma } from '@prisma/client'
 
 import { disconnectDatabase, prisma } from '../../src/config/database.js'
+import { describeIfDatabase } from '../helpers/db.helper.js'
 
-const shouldRunDatabaseSuite = process.env['RUN_DB_SMOKE_TEST'] === 'true'
-const describeDatabaseSuite = shouldRunDatabaseSuite ? describe : describe.skip
+const describeDatabaseSuite = await describeIfDatabase()
 
 /**
  * Assert that Prisma threw a unique-constraint violation.
@@ -41,7 +41,7 @@ async function expectUniqueConstraintViolation(operation: Promise<unknown>): Pro
  * Remove mutable records created by tests while preserving seeded catalog data.
  */
 async function cleanupMutableRecords(): Promise<void> {
-  await prisma.refreshtoken.deleteMany()
+  await prisma.refreshToken.deleteMany()
   await prisma.session.deleteMany()
   await prisma.userRole.deleteMany()
   await prisma.user.deleteMany()
@@ -169,7 +169,7 @@ describeDatabaseSuite('Task B5 - RBAC schema integration', () => {
 
     const tokenHash = 'hashed_refresh_token_abc123'
 
-    const refreshToken = await prisma.refreshtoken.create({
+    const refreshToken = await prisma.refreshToken.create({
       data: {
         userId: user.id,
         sessionId: session.id,
@@ -181,7 +181,7 @@ describeDatabaseSuite('Task B5 - RBAC schema integration', () => {
     expect(refreshToken.tokenHash).toBe(tokenHash)
 
     await expectUniqueConstraintViolation(
-      prisma.refreshtoken.create({
+      prisma.refreshToken.create({
         data: {
           userId: user.id,
           sessionId: session.id,

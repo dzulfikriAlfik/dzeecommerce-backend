@@ -27,10 +27,18 @@ async function bootstrap(): Promise<void> {
 		await connectDatabase()
 		startServer()
 	} catch (error) {
-		logger.error('Application startup failed', {
-			error: error instanceof Error ? error.message : String(error),
-		})
-		process.exit(1)
+		const message = error instanceof Error ? error.message : String(error)
+
+		logger.error('Application startup failed', { error: message })
+
+		// Synchronous fallback so the user always sees something
+		// eslint-disable-next-line no-console
+		console.error(`\n❌ Application startup failed: ${message}\n`)
+
+		// Give Winston time to flush async transports before exit
+		setTimeout(() => {
+			process.exit(1)
+		}, 500)
 	}
 }
 

@@ -1,11 +1,10 @@
 import { checkDatabaseConnection, disconnectDatabase } from '../../src/config/database.js'
+import { describeIfDatabase } from '../helpers/db.helper.js'
 
-describe('Database Connection Smoke Test', () => {
-  const shouldRunSmokeTest = process.env['RUN_DB_SMOKE_TEST'] === 'true'
+const describeDatabaseSuite = await describeIfDatabase()
 
-  const testCase = shouldRunSmokeTest ? it : it.skip
-
-  testCase(
+describeDatabaseSuite('Database Connection Smoke Test', () => {
+  it(
     'should connect to PostgreSQL and execute a basic query',
     async () => {
       const connected = await checkDatabaseConnection()

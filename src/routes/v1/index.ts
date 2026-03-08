@@ -10,14 +10,15 @@
 
 import { Router } from 'express'
 import healthRoutes from './health.routes.js'
+import authRoutes from './auth.routes.js'
 
 const v1Router = Router()
 
 // ── Public routes ──
 v1Router.use('/health', healthRoutes)
+v1Router.use('/auth', authRoutes)
 
 // ── Future feature routes ──
-// v1Router.use('/auth', authRoutes)
 // v1Router.use('/products', productRoutes)
 // v1Router.use('/categories', categoryRoutes)
 // v1Router.use('/cart', cartRoutes)
